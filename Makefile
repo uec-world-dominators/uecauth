@@ -8,6 +8,6 @@ test:
 	python3 test/uec.py
 
 clean:
-	rm -rf build/ dist/ *.egg-info/
+	rm -rf build/ dist/ *.egg-info/ *.lwp
 
 .PHONY: test
