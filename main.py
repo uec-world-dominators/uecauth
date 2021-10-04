@@ -11,7 +11,7 @@ sa = ShibbolethAuthenticator(
     shibboleth_host=shibboleth_host,
     mfa_code_provider=AutoTOTPMFAuthCodeProvider(os.environ['UEC_MFA_SECRET']),
     password_provider=EnvironmentPasswordProvider('UEC_USERNAME', 'UEC_PASSWORD'),
-    debug=True,
+    debug=False,
 )
 
 res = sa.login(campusweb_url)
