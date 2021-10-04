@@ -72,7 +72,7 @@ class ShibbolethAuthenticator():
 
     def _do_login_flow(self, res: requests.Response):
         while True:
-            self.debug and input('login')
+            self.debug and input('login [Enter]')
 
             # assert
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
@@ -107,7 +107,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_mfauth_flow(self, res: requests.Response):
-        self.debug and input('mfauth')
+        self.debug and input('mfauth [Enter]')
         method, url, _data = create_form_data(res.text)
         url = urllib.parse.urljoin(res.url, url)
         if '/mfa/MFAuth.php' in url:
@@ -135,7 +135,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_continue_flow(self, res: requests.Response):
-        self.debug and input('do continue')
+        self.debug and input('do [Enter] continue')
         method, url, data = create_form_data(res.text)
         url = urllib.parse.urljoin(res.url, url)
         res = self._do_continue(method, url, data)
