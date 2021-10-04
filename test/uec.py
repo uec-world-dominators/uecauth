@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, '..')
+import os.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from uecauth.mfa import AutoTOTPMFAuthCodeProvider
 from uecauth.password import DefaultPasswordProvider
 from uecauth.shibboleth import ShibbolethAuthenticator
