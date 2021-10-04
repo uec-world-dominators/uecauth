@@ -1,0 +1,3 @@
+export UEC_USERNAME=""
+export UEC_PASSWORD=""
+export UEC_MFA_SECRET=""
