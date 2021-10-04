@@ -138,7 +138,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_continue_flow(self, res: requests.Response):
-        self.debug and input('do [Enter] continue')
+        self.debug and input('continue [Enter]')
 
         # assert
         doc = bs4.BeautifulSoup(res.text, 'html.parser')
