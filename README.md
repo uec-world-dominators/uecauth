@@ -66,3 +66,10 @@ export UEC_MFA_SECRET=""
 |`PromptingMFAuthCodeProvider`|プロンプトから読み取る|
 |`AutoTOTPMFAuthCodeProvider`|秘密鍵を用いて自動生成する|
 
+#### Socks5プロキシで二段階認証を回避する
+
+```sh
+ssh sol -D 1080 -N -f
+export http_proxy=socks5://localhost:1080
+export https_proxy=socks5://localhost:1080
+```
