@@ -16,12 +16,14 @@ class ShibbolethAuthenticator():
                  lwpcookiejar_path: str = 'cookies.lwp',
                  password_provider: PasswordProvider = PromptingPasswordProvider(),
                  mfa_code_provider: MFAuthCodeProvider = PromptingMFAuthCodeProvider(),
+                 max_attempts: int = 3,
                  debug: bool = False,
                  ) -> None:
         self.original_url = original_url
         self.password_provider = password_provider
         self.mfa_code_provider = mfa_code_provider
         self.shibboleth_host = shibboleth_host
+        self.max_attempts = max_attempts
 
         # setup session
         self.session = requests.Session()
@@ -71,7 +73,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_login_flow(self, res: requests.Response):
-        while True:
+        for _ in range(self.max_attempts):
             self.debug and input('login [Enter]')
 
             # assert
@@ -111,7 +113,7 @@ class ShibbolethAuthenticator():
         method, url, _data = create_form_data(res.text)
         url = urllib.parse.urljoin(res.url, url)
         if '/mfa/MFAuth.php' in url:
-            while True:
+            for _ in range(self.max_attempts):
                 # assert
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
                 assert(doc.select_one('form[name=MFALogin]') != None)
