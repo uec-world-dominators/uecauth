@@ -13,13 +13,13 @@ class ShibbolethAuthenticator():
     def __init__(self,
                  shibboleth_host: str,
                  lwpcookiejar_path: str = 'cookies.lwp',
-                 password_provider: PasswordProvider = PromptingPasswordProvider(),
-                 mfa_code_provider: MFAuthCodeProvider = PromptingMFAuthCodeProvider(),
+                 password_provider: PasswordProvider = None,
+                 mfa_code_provider: MFAuthCodeProvider = None,
                  max_attempts: int = 3,
                  debug: bool = False,
                  ) -> None:
-        self.password_provider = password_provider
-        self.mfa_code_provider = mfa_code_provider
+        self.password_provider = password_provider or PromptingPasswordProvider()
+        self.mfa_code_provider = mfa_code_provider or PromptingMFAuthCodeProvider()
         self.shibboleth_host = shibboleth_host
         self.max_attempts = max_attempts
 
