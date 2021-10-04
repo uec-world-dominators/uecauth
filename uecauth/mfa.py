@@ -15,7 +15,6 @@ class PromptingMFAuthCodeProvider(MFAuthCodeProvider):
 
 class AutoTOTPMFAuthCodeProvider(MFAuthCodeProvider):
     def __init__(self, priv_key) -> None:
-        self.priv_key = priv_key
         self.totp = pyotp.TOTP(priv_key)
 
     def get_code(self) -> str:

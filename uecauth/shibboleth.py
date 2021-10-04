@@ -1,7 +1,6 @@
 import os.path
 import urllib.parse
 from http.cookiejar import LWPCookieJar
-from pprint import pprint
 import requests
 import bs4
 from .mfa import PromptingMFAuthCodeProvider, MFAuthCodeProvider
