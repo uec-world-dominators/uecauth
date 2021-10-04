@@ -142,11 +142,12 @@ class ShibbolethAuthenticator():
 
         # assert
         doc = bs4.BeautifulSoup(res.text, 'html.parser')
-        assert(doc.select_one('noscript input[type=submit][value=Continue]') != None)
+        need_continue = doc.select_one('noscript input[type=submit][value=Continue]') != None
 
         # continue
-        method, url, data = create_form_data(res.text)
-        url = urllib.parse.urljoin(res.url, url)
-        res = self._do_continue(method, url, data)
-        self.debug and debug_response(res)
+        if need_continue:
+            method, url, data = create_form_data(res.text)
+            url = urllib.parse.urljoin(res.url, url)
+            res = self._do_continue(method, url, data)
+            self.debug and debug_response(res)
         return res
