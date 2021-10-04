@@ -18,27 +18,30 @@ class ShibbolethAuthenticator():
                  max_attempts: int = 3,
                  debug: bool = False,
                  ) -> None:
-        self.password_provider = password_provider or PromptingPasswordProvider()
-        self.mfa_code_provider = mfa_code_provider or PromptingMFAuthCodeProvider()
-        self.shibboleth_host = shibboleth_host
-        self.max_attempts = max_attempts
+        self._password_provider = password_provider or PromptingPasswordProvider()
+        self._mfa_code_provider = mfa_code_provider or PromptingMFAuthCodeProvider()
+        self._shibboleth_host = shibboleth_host
+        self._max_attempts = max_attempts
 
         # setup session
-        self.session = requests.Session()
+        self._session = requests.Session()
 
         # setup cookiejar
-        self.lwp = LWPCookieJar(filename=lwpcookiejar_path)
-        self.session.cookies = self.lwp
+        self._lwp = LWPCookieJar(filename=lwpcookiejar_path)
+        self._session.cookies = self._lwp
         if os.path.exists(lwpcookiejar_path):
-            self.lwp.load(ignore_discard=True, ignore_expires=True)
+            self._lwp.load(ignore_discard=True, ignore_expires=True)
 
         self.debug = debug
 
+    def get_cookies(self) -> LWPCookieJar:
+        return self._lwp
+
     def login(self, original_url: str) -> requests.Response:
         # Start
-        res = self.session.get(original_url)
+        res = self._session.get(original_url)
         self.debug and debug_response(res)
-        if urllib.parse.urlparse(res.url).hostname != self.shibboleth_host:
+        if urllib.parse.urlparse(res.url).hostname != self._shibboleth_host:
             # already logged in
             return res
 
@@ -55,23 +58,23 @@ class ShibbolethAuthenticator():
         res = self._do_continue_flow(res)
 
         # save cookies
-        self.lwp.save(ignore_discard=True, ignore_expires=True)
+        self._lwp.save(ignore_discard=True, ignore_expires=True)
 
         return res
 
     def _do_login(self, method, url, data):
         assert(method.lower() == 'post')
-        username, password = self.password_provider.get()
+        username, password = self._password_provider.get()
         data.update({
             'j_username': username,
             'j_password': password,
             '_eventId_proceed': '',
         })
-        res = self.session.post(url, data=data)
+        res = self._session.post(url, data=data)
         return res
 
     def _do_login_flow(self, res: requests.Response):
-        for _ in range(self.max_attempts):
+        for _ in range(self._max_attempts):
             self.debug and input('login [Enter]')
 
             # assert
@@ -96,14 +99,14 @@ class ShibbolethAuthenticator():
 
     def _do_mfauth(self, method, url, _data):
         assert(method.lower() == 'post')
-        mfa_code = self.mfa_code_provider.get_code()
+        mfa_code = self._mfa_code_provider.get_code()
         data = {
             'csrf_token': _data['csrf_token'],
             'authcode': mfa_code,
             'login': 'login',
             'mfa_type': 'totp'
         }
-        res = self.session.post(url, data=data)
+        res = self._session.post(url, data=data)
         return res
 
     def _do_mfauth_flow(self, res: requests.Response):
@@ -111,7 +114,7 @@ class ShibbolethAuthenticator():
         method, url, _data = create_form_data(res.text)
         url = urllib.parse.urljoin(res.url, url)
         if '/mfa/MFAuth.php' in url:
-            for _ in range(self.max_attempts):
+            for _ in range(self._max_attempts):
                 # assert
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
                 assert(doc.select_one('form[name=MFALogin]') != None)
@@ -131,7 +134,7 @@ class ShibbolethAuthenticator():
 
     def _do_continue(self, method, url, data):
         assert(method.lower() == 'post')
-        res = self.session.post(url, data=data)
+        res = self._session.post(url, data=data)
         return res
 
     def _do_continue_flow(self, res: requests.Response):

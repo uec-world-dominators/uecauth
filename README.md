@@ -35,11 +35,8 @@ shibboleth = ShibbolethAuthenticator(
 res = shibboleth.login(campusweb_url)
 print(res.url)
 
-# requestsパッケージのセッション
-session: requests.Session = shibboleth.session
-
 # http.LWPCookieJar
-cookies: http.cookiejar.LWPCookieJar = shibboleth.lwp
+cookies: http.cookiejar.LWPCookieJar = shibboleth.get_cookies()
 ```
 
 ### 環境変数
