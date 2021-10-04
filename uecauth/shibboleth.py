@@ -11,7 +11,6 @@ from .util import create_form_data, debug_response
 
 class ShibbolethAuthenticator():
     def __init__(self,
-                 original_url: str,
                  shibboleth_host: str,
                  lwpcookiejar_path: str = 'cookies.lwp',
                  password_provider: PasswordProvider = PromptingPasswordProvider(),
@@ -19,7 +18,6 @@ class ShibbolethAuthenticator():
                  max_attempts: int = 3,
                  debug: bool = False,
                  ) -> None:
-        self.original_url = original_url
         self.password_provider = password_provider
         self.mfa_code_provider = mfa_code_provider
         self.shibboleth_host = shibboleth_host
@@ -143,4 +141,3 @@ class ShibbolethAuthenticator():
         res = self._do_continue(method, url, data)
         self.debug and debug_response(res)
         return res
-
