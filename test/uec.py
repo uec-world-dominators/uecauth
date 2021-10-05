@@ -4,10 +4,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from uecauth.mfa import AutoTOTPMFAuthCodeProvider
 from uecauth.password import DefaultPasswordProvider
 from uecauth.shibboleth import ShibbolethAuthenticator
+from uecauth.logger import get_logger
 import unittest
 import os
 import bs4
 
+logger = get_logger()
 
 class Test(unittest.TestCase):
     def test_uec_library(self):
@@ -23,10 +25,11 @@ class Test(unittest.TestCase):
                 os.environ['UEC_PASSWORD']
             ),
             debug=False,
+            logger=logger,
         )
 
         res = shibboleth.login(url)
-        print(res.url)
+        logger.info(res.url)
 
         return self.assertTrue(res.url == url)
 
@@ -42,10 +45,11 @@ class Test(unittest.TestCase):
                 os.environ['UEC_PASSWORD']
             ),
             debug=False,
+            logger=logger,
         )
 
         res = shibboleth.login(url)
-        print(res.url)
+        logger.info(res.url)
 
         campusweb_url = 'https://campusweb.office.uec.ac.jp/campusweb/campussquare.do'
         return self.assertTrue(res.url.startswith(campusweb_url))

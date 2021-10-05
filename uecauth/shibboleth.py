@@ -1,11 +1,13 @@
 import os.path
 import urllib.parse
+import logging
 from http.cookiejar import CookieJar, LWPCookieJar
 import requests
 import bs4
 from .mfa import PromptingMFAuthCodeProvider, MFAuthCodeProvider
 from .password import PasswordProvider, PromptingPasswordProvider
 from .util import create_form_data, debug_response
+from . import info
 
 
 class ShibbolethAuthenticator():
@@ -16,6 +18,7 @@ class ShibbolethAuthenticator():
                  mfa_code_provider: MFAuthCodeProvider = None,
                  max_attempts: int = 3,
                  debug: bool = False,
+                 logger: logging.Logger = None,
                  ) -> None:
         self._password_provider = password_provider or PromptingPasswordProvider()
         self._mfa_code_provider = mfa_code_provider or PromptingMFAuthCodeProvider()
@@ -23,6 +26,7 @@ class ShibbolethAuthenticator():
         self._max_attempts = max_attempts
         self._lwpcookiejar_path = lwpcookiejar_path
         self.debug = debug
+        self.logger = logger or logging.getLogger(info.name)
 
     def _create_session(self, cookiejar: CookieJar = None):
         # setup session
@@ -88,9 +92,12 @@ class ShibbolethAuthenticator():
             return self.continue_login(res, session=self._session)
         else:
             # already logged in
+            self.logger.info('既にログイン済みです')
             return res
 
     def _do_login_flow(self, res: requests.Response):
+        self.logger.info('Shibbolethにログインします')
+
         # Continue
         res = self._do_continue_flow(res)
 
@@ -122,6 +129,7 @@ class ShibbolethAuthenticator():
     def _do_password_auth_flow(self, res: requests.Response):
         for _ in range(self._max_attempts):
             self.debug and input('login [Enter]')
+            self.logger.info('パスワード認証を行います')
 
             # assert
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
@@ -138,7 +146,7 @@ class ShibbolethAuthenticator():
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
             error = doc.select_one('.form-error')
             if error:
-                print(f'ログインに失敗しました: {error.text}')
+                self.logger.error(f'ログインに失敗しました: {error.text}')
             else:
                 break
         return res
@@ -161,6 +169,8 @@ class ShibbolethAuthenticator():
         url = urllib.parse.urljoin(res.url, url)
         if '/mfa/MFAuth.php' in url:
             for _ in range(self._max_attempts):
+                self.logger.info('二段階認証を行います')
+
                 # assert
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
                 assert doc.select_one('form[name=MFALogin]') != None
@@ -173,7 +183,7 @@ class ShibbolethAuthenticator():
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
                 error = doc.select_one('.input_error_for_user')
                 if error:
-                    print(f'二段階認証に失敗しました: {error.text}')
+                    self.logger.error(f'二段階認証に失敗しました: {error.text}')
                 else:
                     break
         return res
@@ -192,6 +202,8 @@ class ShibbolethAuthenticator():
 
         # continue
         if need_continue:
+            self.logger.info('Continueします')
+
             method, url, data = create_form_data(res.text)
             url = urllib.parse.urljoin(res.url, url)
             res = self._do_continue(method, url, data)
