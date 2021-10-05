@@ -41,6 +41,10 @@ class ShibbolethAuthenticator():
         return session
 
     def get_cookies(self) -> LWPCookieJar:
+        '''
+        認証情報の取得
+        '''
+        assert self._session != None, 'ログイン前に認証情報を取得することはできません'
         return self._session.cookies
 
     def continue_login(self,
