@@ -1,5 +1,6 @@
 import setuptools
 import os
+import uecauth.info
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -14,10 +15,10 @@ def _readme():
 
 
 setuptools.setup(
-    name='uecauth',
+    name=uecauth.info.name,
     packages=setuptools.find_packages(),
 
-    version='0.0.6',
+    version=uecauth.info.version,
 
     license=license,
 
