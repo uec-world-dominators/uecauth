@@ -60,8 +60,8 @@ class ShibbolethAuthenticator():
         ```
         '''
 
-        assert(self.is_shibboleth(res.url), f'Response URLのホストは{self._shibboleth_host}である必要があります')
-        assert(session or session_cookies, 'SessionまたはSession Cookieを指定する必要があります')
+        assert self.is_shibboleth(res.url), f'Response URLのホストは{self._shibboleth_host}である必要があります'
+        assert session or session_cookies, 'SessionまたはSession Cookieを指定する必要があります'
 
         # renew session with cookies
         self._session = session or self._create_session(cookiejar=session_cookies)
@@ -107,7 +107,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_password_auth(self, method, url, data):
-        assert(method.lower() == 'post')
+        assert method.lower() == 'post'
         username, password = self._password_provider.get()
         data.update({
             'j_username': username,
@@ -123,8 +123,8 @@ class ShibbolethAuthenticator():
 
             # assert
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
-            assert(doc.select_one('input[name=j_username]') != None)
-            assert(doc.select_one('input[name=j_password]') != None)
+            assert doc.select_one('input[name=j_username]') != None
+            assert doc.select_one('input[name=j_password]') != None
 
             # do login
             method, url, data = create_form_data(res.text)
@@ -142,7 +142,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_mfauth(self, method, url, _data):
-        assert(method.lower() == 'post')
+        assert method.lower() == 'post'
         mfa_code = self._mfa_code_provider.get_code()
         data = {
             'csrf_token': _data['csrf_token'],
@@ -161,7 +161,7 @@ class ShibbolethAuthenticator():
             for _ in range(self._max_attempts):
                 # assert
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
-                assert(doc.select_one('form[name=MFALogin]') != None)
+                assert doc.select_one('form[name=MFALogin]') != None
 
                 # do mfauth
                 res = self._do_mfauth(method, url, _data)
@@ -177,7 +177,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_continue(self, method, url, data):
-        assert(method.lower() == 'post')
+        assert method.lower() == 'post'
         res = self._session.post(url, data=data)
         return res
 
