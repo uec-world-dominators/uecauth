@@ -18,7 +18,7 @@ setuptools.setup(
     name='uecauth',
     packages=setuptools.find_packages(),
 
-    version='0.0.5',
+    version='0.0.6',
 
     license=license,
 
