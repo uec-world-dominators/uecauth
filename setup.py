@@ -13,7 +13,6 @@ def _readme():
         return f.read()
 
 
-print(setuptools.find_packages())
 setuptools.setup(
     name='uecauth',
     packages=setuptools.find_packages(),
