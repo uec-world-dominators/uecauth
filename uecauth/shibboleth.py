@@ -66,7 +66,7 @@ class ShibbolethAuthenticator():
         # renew session with cookies
         self._session = session or self._create_session(cookiejar=session_cookies)
 
-        return self._login_sso(res)
+        return self._do_login_flow(res)
 
     def login(self, target_url: str) -> requests.Response:
         '''
@@ -88,12 +88,12 @@ class ShibbolethAuthenticator():
             # already logged in
             return res
 
-    def _login_sso(self, res: requests.Response):
+    def _do_login_flow(self, res: requests.Response):
         # Continue
         res = self._do_continue_flow(res)
 
         # Login
-        res = self._do_login_flow(res)
+        res = self._do_password_auth_flow(res)
 
         # MFAuth
         res = self._do_mfauth_flow(res)
@@ -106,7 +106,7 @@ class ShibbolethAuthenticator():
 
         return res
 
-    def _do_login(self, method, url, data):
+    def _do_password_auth(self, method, url, data):
         assert(method.lower() == 'post')
         username, password = self._password_provider.get()
         data.update({
@@ -117,7 +117,7 @@ class ShibbolethAuthenticator():
         res = self._session.post(url, data=data)
         return res
 
-    def _do_login_flow(self, res: requests.Response):
+    def _do_password_auth_flow(self, res: requests.Response):
         for _ in range(self._max_attempts):
             self.debug and input('login [Enter]')
 
@@ -129,7 +129,7 @@ class ShibbolethAuthenticator():
             # do login
             method, url, data = create_form_data(res.text)
             url = urllib.parse.urljoin(res.url, url)
-            res = self._do_login(method, url, data)
+            res = self._do_password_auth(method, url, data)
             self.debug and debug_response(res)
 
             # check error
