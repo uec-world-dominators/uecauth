@@ -156,3 +156,6 @@ class ShibbolethAuthenticator():
 
             self.debug and debug_response(res)
         return res
+
+    def is_shibboleth(self, url: str) -> bool:
+        return urllib.parse.urlparse(url).hostname == self._shibboleth_host
