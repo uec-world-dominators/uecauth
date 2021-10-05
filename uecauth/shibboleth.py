@@ -27,27 +27,35 @@ class ShibbolethAuthenticator():
         self._lwpcookiejar_path = lwpcookiejar_path
         self.debug = debug
         self.logger = logger or logging.getLogger(info.name)
+        self._session = None
 
     def _create_session(self, cookiejar: CookieJar = None):
         # setup session
         session = requests.Session()
 
         # setup cookiejar
-        session.cookies = LWPCookieJar(filename=self._lwpcookiejar_path)
-        if os.path.exists(self._lwpcookiejar_path):
-            session.cookies.load(ignore_discard=True, ignore_expires=True)
+        session.cookies = self._load_cookies()
         if cookiejar:
             for cookie in cookiejar:
                 session.cookies.set_cookie(cookie)
 
         return session
 
+    def _load_cookies(self) -> LWPCookieJar:
+        cookies = LWPCookieJar(filename=self._lwpcookiejar_path)
+        if os.path.exists(self._lwpcookiejar_path):
+            cookies.load(ignore_discard=True, ignore_expires=True)
+        return cookies
+
     def get_cookies(self) -> LWPCookieJar:
         '''
         認証情報の取得
         '''
-        assert self._session != None, 'ログイン前に認証情報を取得することはできません'
-        return self._session.cookies
+
+        if self._session:
+            return self._session.cookies
+        else:
+            return self._load_cookies()
 
     def continue_login(self,
                        res: requests.Response,
