@@ -1,8 +1,10 @@
 import os.path
+from urllib import request
 import urllib.parse
-from http.cookiejar import LWPCookieJar
+from http.cookiejar import CookieJar, LWPCookieJar
 import requests
 import bs4
+from requests.sessions import session
 from .mfa import PromptingMFAuthCodeProvider, MFAuthCodeProvider
 from .password import PasswordProvider, PromptingPasswordProvider
 from .util import create_form_data, debug_response
@@ -21,29 +23,72 @@ class ShibbolethAuthenticator():
         self._mfa_code_provider = mfa_code_provider or PromptingMFAuthCodeProvider()
         self._shibboleth_host = shibboleth_host
         self._max_attempts = max_attempts
-
-        # setup session
-        self._session = requests.Session()
-
-        # setup cookiejar
-        self._lwp = LWPCookieJar(filename=lwpcookiejar_path)
-        self._session.cookies = self._lwp
-        if os.path.exists(lwpcookiejar_path):
-            self._lwp.load(ignore_discard=True, ignore_expires=True)
-
+        self._lwpcookiejar_path = lwpcookiejar_path
         self.debug = debug
 
-    def get_cookies(self) -> LWPCookieJar:
-        return self._lwp
+    def _create_session(self, cookiejar: CookieJar = None):
+        # setup session
+        session = requests.Session()
 
-    def login(self, original_url: str) -> requests.Response:
+        # setup cookiejar
+        session.cookies = LWPCookieJar(filename=self._lwpcookiejar_path)
+        if os.path.exists(self._lwpcookiejar_path):
+            session.cookies.load(ignore_discard=True, ignore_expires=True)
+        if cookiejar:
+            for cookie in cookiejar:
+                session.cookies.set_cookie(cookie)
+
+        return session
+
+    def get_cookies(self) -> LWPCookieJar:
+        return self._session.cookies
+
+    def continue_login(self,
+                       res: requests.Response,
+                       session: requests.Session = None,
+                       session_cookies: CookieJar = None,
+                       ) -> requests.Response:
+        '''
+        既に送ったリクエストのリダイレクト先がshibbolethのとき、続けてログインする
+
+        ```py
+        session = requests.Session()
+        response = session.get(<target_url>)
+
+        if 'shibboleth' in response.url:
+            response = shibboleth.continue_login(response, session)
+        ```
+        '''
+
+        assert(self.is_shibboleth(res.url), f'Response URLのホストは{self._shibboleth_host}である必要があります')
+        assert(session or session_cookies, 'SessionまたはSession Cookieを指定する必要があります')
+
+        # renew session with cookies
+        self._session = session or self._create_session(cookiejar=session_cookies)
+
+        return self._login_sso(res)
+
+    def login(self, target_url: str) -> requests.Response:
+        '''
+        target_urlに新たにログインする
+
+        ```py
+        response = shibboleth.login(<target_url>)
+        ```
+        '''
+
+        # setup session
+        self._session = self._create_session()
+
         # Start
-        res = self._session.get(original_url)
-        self.debug and debug_response(res)
-        if urllib.parse.urlparse(res.url).hostname != self._shibboleth_host:
+        res = self._session.get(target_url)
+        if self.is_shibboleth(res.url):
+            return self.continue_login(res, session=self._session)
+        else:
             # already logged in
             return res
 
+    def _login_sso(self, res: requests.Response):
         # Continue
         res = self._do_continue_flow(res)
 
@@ -57,7 +102,7 @@ class ShibbolethAuthenticator():
         res = self._do_continue_flow(res)
 
         # save cookies
-        self._lwp.save(ignore_discard=True, ignore_expires=True)
+        self._session.cookies.save(ignore_discard=True, ignore_expires=True)
 
         return res
 
@@ -91,7 +136,7 @@ class ShibbolethAuthenticator():
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
             error = doc.select_one('.form-error')
             if error:
-                print(f'Failed to login: {error.text}')
+                print(f'ログインに失敗しました: {error.text}')
             else:
                 break
         return res
@@ -126,7 +171,7 @@ class ShibbolethAuthenticator():
                 doc = bs4.BeautifulSoup(res.text, 'html.parser')
                 error = doc.select_one('.input_error_for_user')
                 if error:
-                    print(f'Failed to login: {error.text}')
+                    print(f'二段階認証に失敗しました: {error.text}')
                 else:
                     break
         return res
@@ -152,7 +197,7 @@ class ShibbolethAuthenticator():
             # assert
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
             if '過去のリクエスト' in doc.select_one('title').text:
-                raise RuntimeError('Shibboleth Error: Old request')
+                raise RuntimeError('失敗しました: 過去のリクエスト')
 
             self.debug and debug_response(res)
         return res
