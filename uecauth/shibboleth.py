@@ -206,3 +206,7 @@ class ShibbolethAuthenticator():
 
     def is_shibboleth(self, url: str) -> bool:
         return urllib.parse.urlparse(url).hostname == self._shibboleth_host
+
+    def __del__(self):
+        if self._session:
+            self._session.close()
