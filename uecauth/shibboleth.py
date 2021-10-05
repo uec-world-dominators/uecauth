@@ -1,10 +1,8 @@
 import os.path
-from urllib import request
 import urllib.parse
 from http.cookiejar import CookieJar, LWPCookieJar
 import requests
 import bs4
-from requests.sessions import session
 from .mfa import PromptingMFAuthCodeProvider, MFAuthCodeProvider
 from .password import PasswordProvider, PromptingPasswordProvider
 from .util import create_form_data, debug_response
