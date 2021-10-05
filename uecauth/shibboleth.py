@@ -148,5 +148,11 @@ class ShibbolethAuthenticator():
             method, url, data = create_form_data(res.text)
             url = urllib.parse.urljoin(res.url, url)
             res = self._do_continue(method, url, data)
+
+            # assert
+            doc = bs4.BeautifulSoup(res.text, 'html.parser')
+            if '過去のリクエスト' in doc.select_one('title').text:
+                raise RuntimeError('Shibboleth Error: Old request')
+
             self.debug and debug_response(res)
         return res
