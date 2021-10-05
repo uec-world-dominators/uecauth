@@ -230,3 +230,10 @@ class ShibbolethAuthenticator():
     def __del__(self):
         if self._session:
             self._session.close()
+
+    def is_logged_in(self, url: str) -> bool:
+        res = requests.head(url,
+                            cookies=self.get_cookies(),
+                            allow_redirects=False)
+        return not (res.status_code // 100 == 3 and
+                    self.is_shibboleth(res.headers['Location']))
