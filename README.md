@@ -18,12 +18,8 @@ from uecauth.shibboleth import ShibbolethAuthenticator
 from uecauth.password import DefaultPasswordProvider
 from uecauth.mfa import AutoTOTPMFAuthCodeProvider
 
-campusweb_url = 'https://campusweb.office.uec.ac.jp/campusweb/ssologin.do'
-shibboleth_host = 'shibboleth.cc.uec.ac.jp'
-
 shibboleth = ShibbolethAuthenticator(
-    original_url=campusweb_url,
-    shibboleth_host=shibboleth_host,
+    shibboleth_host='shibboleth.cc.uec.ac.jp',
     mfa_code_provider=AutoTOTPMFAuthCodeProvider(os.environ['UEC_MFA_SECRET']),
     password_provider=DefaultPasswordProvider(
         os.environ['UEC_USERNAME'],
@@ -32,6 +28,7 @@ shibboleth = ShibbolethAuthenticator(
     debug=False,
 )
 
+campusweb_url = 'https://campusweb.office.uec.ac.jp/campusweb/ssologin.do'
 res = shibboleth.login(campusweb_url)
 print(res.url)
 
