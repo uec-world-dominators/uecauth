@@ -4,6 +4,8 @@ import logging
 from http.cookiejar import CookieJar, LWPCookieJar
 import requests
 import bs4
+
+from uecauth.errors import MaximumAttemptsExceededError, OldRequestError
 from .mfa import PromptingMFAuthCodeProvider, MFAuthCodeProvider
 from .password import PasswordProvider, PromptingPasswordProvider
 from .util import create_form_data, debug_response
@@ -157,6 +159,9 @@ class ShibbolethAuthenticator():
                 self.logger.error(f'ログインに失敗しました: {error.text}')
             else:
                 break
+        else:
+            self.logger.fatal('最大試行回数を超えました')
+            raise MaximumAttemptsExceededError()
         return res
 
     def _do_mfauth(self, method, url, _data):
@@ -194,6 +199,9 @@ class ShibbolethAuthenticator():
                     self.logger.error(f'二段階認証に失敗しました: {error.text}')
                 else:
                     break
+        else:
+            self.logger.fatal('最大試行回数を超えました')
+            raise MaximumAttemptsExceededError()
         return res
 
     def _do_continue(self, method, url, data):
@@ -219,7 +227,8 @@ class ShibbolethAuthenticator():
             # assert
             doc = bs4.BeautifulSoup(res.text, 'html.parser')
             if '過去のリクエスト' in doc.select_one('title').text:
-                raise RuntimeError('失敗しました: 過去のリクエスト')
+                self.logger.fatal('失敗しました: 過去のリクエスト')
+                raise OldRequestError()
 
             self.debug and debug_response(res)
         return res
