@@ -199,9 +199,9 @@ class ShibbolethAuthenticator():
                     self.logger.error(f'二段階認証に失敗しました: {error.text}')
                 else:
                     break
-        else:
-            self.logger.fatal('最大試行回数を超えました')
-            raise MaximumAttemptsExceededError()
+            else:
+                self.logger.fatal('最大試行回数を超えました')
+                raise MaximumAttemptsExceededError()
         return res
 
     def _do_continue(self, method, url, data):
