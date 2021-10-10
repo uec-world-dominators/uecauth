@@ -137,7 +137,7 @@ class ShibbolethAuthenticator():
         return res
 
     def _do_password_auth_flow(self, res: requests.Response):
-        for _ in range(self._max_attempts):
+        for _ in range(self._password_provider.max_attempts()):
             self.debug and input('login [Enter]')
             self.logger.info('パスワード認証を行います')
 
@@ -181,7 +181,7 @@ class ShibbolethAuthenticator():
         method, url, _data = create_form_data(res.text)
         url = urllib.parse.urljoin(res.url, url)
         if '/mfa/MFAuth.php' in url:
-            for _ in range(self._max_attempts):
+            for _ in range(self._mfa_code_provider.max_attempts()):
                 self.logger.info('二段階認証を行います')
 
                 # assert

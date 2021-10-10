@@ -4,7 +4,10 @@ class PasswordProvider():
     '''
 
     def get(self):
-        pass
+        raise NotImplementedError()
+
+    def max_attempts(self):
+        raise NotImplementedError()
 
 
 class DefaultPasswordProvider(PasswordProvider):
@@ -19,6 +22,9 @@ class DefaultPasswordProvider(PasswordProvider):
     def get(self):
         return self.username, self.password
 
+    def max_attempts(self):
+        return 1
+
 
 class PromptingPasswordProvider(PasswordProvider):
     '''
@@ -27,3 +33,6 @@ class PromptingPasswordProvider(PasswordProvider):
 
     def get(self):
         return input('Username? '), input('Password? ')
+
+    def max_attempts(self):
+        return 3

@@ -8,7 +8,10 @@ class MFAuthCodeProvider():
     '''
 
     def get_code(self) -> str:
-        pass
+        raise NotImplementedError()
+
+    def max_attempts(self):
+        raise NotImplementedError()
 
 
 class PromptingMFAuthCodeProvider(MFAuthCodeProvider):
@@ -19,6 +22,9 @@ class PromptingMFAuthCodeProvider(MFAuthCodeProvider):
     def get_code(self):
         mfa_code = input('二段階認証コードを入力してください> ').strip()
         return mfa_code
+
+    def max_attempts(self):
+        return 3
 
 
 class AutoTOTPMFAuthCodeProvider(MFAuthCodeProvider):
@@ -31,6 +37,9 @@ class AutoTOTPMFAuthCodeProvider(MFAuthCodeProvider):
 
     def get_code(self) -> str:
         return self.totp.now()
+
+    def max_attempts(self):
+        return 2
 
 
 if __name__ == '__main__':
