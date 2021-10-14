@@ -1,3 +1,6 @@
+import getpass
+
+
 class PasswordProvider():
     '''
     パスワード取得の基底クラス
@@ -32,7 +35,7 @@ class PromptingPasswordProvider(PasswordProvider):
     '''
 
     def get(self):
-        return input('Username? '), input('Password? ')
+        return input('Username? '), getpass.getpass('Password? ')
 
     def max_attempts(self):
         return 3
