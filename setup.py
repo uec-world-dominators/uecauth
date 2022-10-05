@@ -17,26 +17,18 @@ def _readme():
 setuptools.setup(
     name=uecauth.info.name,
     packages=setuptools.find_packages(),
-
     version=uecauth.info.version,
-
-    license=license,
-
-
     install_requires=_requirements(),
-
     author='shosatojp',
     author_email='me@shosato.jp',
-
     url='https://github.com/uec-world-dominators/uecauth',
-
     description='UEC Auth',
     long_description=_readme(),
     long_description_content_type='text/markdown',
     keywords='',
-
     classifiers=[
         'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
     ],
     python_requires='>=3.6',
 )
